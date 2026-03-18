@@ -45,7 +45,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     return newErrors;
   }
 
-  // ── Submit ─────────────────────────────────────────────────
+  // ── Submit REAL ─────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -59,13 +59,28 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     setLoading(true);
 
     try {
-      // Aquí Max conectará con el backend (NextAuth)
-      // Por ahora solo simulamos el registro
-      console.log("Registrando usuario:", { nombre, email });
-      await new Promise((res) => setTimeout(res, 1000));
-      alert("Registro exitoso — conectar con Max");
-    } catch {
-      setErrors({ general: "Ocurrió un error. Intentá de nuevo." });
+      // AQUÍ HACEMOS LA CONEXIÓN REAL
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: nombre,    // Enviamos 'nombre' como 'name' para el backend
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al registrar");
+      }
+
+      alert("¡Ahora sí! Usuario guardado en Supabase.");
+      onSwitchToLogin(); // Redirigir al login si todo salió bien
+
+    } catch (err: any) {
+      setErrors({ general: err.message || "Ocurrió un error. Intentá de nuevo." });
     } finally {
       setLoading(false);
     }
